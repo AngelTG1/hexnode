@@ -1,4 +1,4 @@
-// ===== src/users/domain/User.ts =====
+// ===== src/feature/auth/users/domain/User.ts =====
 export class User {
     constructor(
         public readonly id: number,
@@ -27,6 +27,21 @@ export class User {
             updatedAt: this.updatedAt
         };
     }
+
+    // Método para verificar si el usuario es administrador
+    public isAdmin(): boolean {
+        return this.role === 'memberships';
+    }
+
+    // Método para verificar si es cliente
+    public isCustomer(): boolean {
+        return this.role === 'Cliente';
+    }
+
+    // Método para obtener el nombre completo
+    public getFullName(): string {
+        return `${this.name} ${this.lastName}`;
+    }
 }
 
 export interface UserResponse {
@@ -48,4 +63,14 @@ export interface CreateUserData {
     password: string;
     phone?: string;
     role?: 'Cliente' | 'memberships';
+}
+
+// Nuevo: Interface extendida para incluir información de suscripción
+export interface UserWithSubscription extends UserResponse {
+    subscription?: {
+        isActive: boolean;
+        planName?: string;
+        expiresAt?: Date;
+        canSell: boolean;
+    };
 }

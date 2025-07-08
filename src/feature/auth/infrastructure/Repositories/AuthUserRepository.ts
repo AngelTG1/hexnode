@@ -16,4 +16,6 @@ export class AuthUserRepository implements AuthRepository {
     async emailExists(email: string): Promise<boolean> {
         return await this.userRepository.emailExists(email);
     }
+
+    
 }

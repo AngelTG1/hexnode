@@ -5,16 +5,16 @@ import { UserRepository } from '../../domain/UserRepository';
 import { v4 as uuidv4 } from 'uuid';
 
 export class MysqlUserRepository implements UserRepository {
-    
+
     async findAll(): Promise<User[]> {
         console.log('📋 MysqlUserRepository - Finding all users');
-        
+
         const sql = `
             SELECT id, uuid, name, lastName, email, password, phone, role, created_at, updated_at 
             FROM users 
             ORDER BY created_at DESC
         `;
-        
+
         try {
             const rows = await executeQuery(sql);
             const users = rows.map((row: any) => this.mapRowToUser(row));
@@ -28,13 +28,13 @@ export class MysqlUserRepository implements UserRepository {
 
     async findByEmail(email: string): Promise<User | null> {
         console.log('🔍 MysqlUserRepository - Finding user by email:', email);
-        
+
         const sql = `
             SELECT id, uuid, name, lastName, email, password, phone, role, created_at, updated_at 
             FROM users 
             WHERE email = ?
         `;
-        
+
         try {
             const rows = await executeQuery(sql, [email]);
             if (rows.length > 0) {
@@ -52,9 +52,9 @@ export class MysqlUserRepository implements UserRepository {
 
     async emailExists(email: string): Promise<boolean> {
         console.log('🔍 MysqlUserRepository - Checking if email exists:', email);
-        
+
         const sql = 'SELECT COUNT(*) as count FROM users WHERE email = ?';
-        
+
         try {
             const rows = await executeQuery(sql, [email]);
             const exists = rows[0].count > 0;
@@ -68,15 +68,15 @@ export class MysqlUserRepository implements UserRepository {
 
     async create(userData: CreateUserData): Promise<User> {
         console.log('💾 MysqlUserRepository - Creating user:', userData.email);
-        
+
         const uuid = uuidv4();
         const { name, lastName, email, password, phone, role = 'Cliente' } = userData;
-        
+
         const sql = `
             INSERT INTO users (uuid, name, lastName, email, password, phone, role)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
-        
+
         const params = [
             uuid,
             name.trim(),
@@ -86,39 +86,39 @@ export class MysqlUserRepository implements UserRepository {
             phone?.trim() || null,
             role
         ];
-        
+
         try {
             const result = await executeQuery(sql, params);
             console.log('✅ User inserted with ID:', result.insertId);
-            
+
             // Obtener el usuario creado
             const createdUser = await this.findByUuid(uuid);
             if (!createdUser) {
                 throw new Error('Failed to retrieve created user');
             }
-            
+
             console.log('🎉 User created successfully');
             return createdUser;
         } catch (error: any) {
             console.error('💥 Error creating user:', error.message);
-            
+
             if (error.code === 'ER_DUP_ENTRY') {
                 throw new Error('Email already exists');
             }
-            
+
             throw new Error('Failed to create user');
         }
     }
 
     async findByUuid(uuid: string): Promise<User | null> {
         console.log('🔍 MysqlUserRepository - Finding user by UUID:', uuid);
-        
+
         const sql = `
             SELECT id, uuid, name, lastName, email, password, phone, role, created_at, updated_at 
             FROM users 
             WHERE uuid = ?
         `;
-        
+
         try {
             const rows = await executeQuery(sql, [uuid]);
             if (rows.length > 0) {
@@ -136,13 +136,13 @@ export class MysqlUserRepository implements UserRepository {
 
     async findById(id: number): Promise<User | null> {
         console.log('🔍 MysqlUserRepository - Finding user by ID:', id);
-        
+
         const sql = `
             SELECT id, uuid, name, lastName, email, password, phone, role, created_at, updated_at 
             FROM users 
             WHERE id = ?
         `;
-        
+
         try {
             const rows = await executeQuery(sql, [id]);
             if (rows.length > 0) {
@@ -160,10 +160,10 @@ export class MysqlUserRepository implements UserRepository {
 
     async update(uuid: string, userData: Partial<CreateUserData>): Promise<User | null> {
         console.log('🔄 MysqlUserRepository - Updating user:', uuid);
-        
+
         const updateFields: string[] = [];
         const updateValues: any[] = [];
-        
+
         if (userData.name) {
             updateFields.push('name = ?');
             updateValues.push(userData.name.trim());
@@ -188,25 +188,25 @@ export class MysqlUserRepository implements UserRepository {
             updateFields.push('role = ?');
             updateValues.push(userData.role);
         }
-        
+
         if (updateFields.length === 0) {
             console.log('❌ No fields to update');
             return null;
         }
-        
+
         updateFields.push('updated_at = CURRENT_TIMESTAMP');
         updateValues.push(uuid);
-        
+
         const sql = `UPDATE users SET ${updateFields.join(', ')} WHERE uuid = ?`;
-        
+
         try {
             const result = await executeQuery(sql, updateValues);
-            
+
             if (result.affectedRows > 0) {
                 console.log('✅ User updated successfully');
                 return await this.findByUuid(uuid);
             }
-            
+
             console.log('❌ User not found for update');
             return null;
         } catch (error) {
@@ -215,15 +215,41 @@ export class MysqlUserRepository implements UserRepository {
         }
     }
 
+    async updateUserRole(userId: number, role: 'Cliente' | 'memberships'): Promise<boolean> {
+        console.log(`🔄 MysqlUserRepository - Updating user role for ID ${userId} to:`, role);
+
+        const sql = `
+        UPDATE users 
+        SET role = ?, updated_at = CURRENT_TIMESTAMP 
+        WHERE id = ?
+    `;
+
+        try {
+            const result = await executeQuery(sql, [role, userId]);
+            const updated = result.affectedRows > 0;
+
+            console.log(`${updated ? '✅' : '❌'} Role update result:`, result.affectedRows, 'rows affected');
+
+            if (updated) {
+                console.log(`🎉 User ${userId} role updated to: ${role}`);
+            }
+
+            return updated;
+        } catch (error) {
+            console.error('💥 Error updating user role:', error);
+            throw new Error('Failed to update user role');
+        }
+    }
+
     async delete(uuid: string): Promise<boolean> {
         console.log('🗑️ MysqlUserRepository - Deleting user:', uuid);
-        
+
         const sql = 'DELETE FROM users WHERE uuid = ?';
-        
+
         try {
             const result = await executeQuery(sql, [uuid]);
             const deleted = result.affectedRows > 0;
-            
+
             console.log(`${deleted ? '✅' : '❌'} Delete result:`, result.affectedRows, 'rows affected');
             return deleted;
         } catch (error) {

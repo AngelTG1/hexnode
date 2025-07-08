@@ -1,4 +1,5 @@
 import { User } from '../../users/domain/User';
+import { FCMTokenData } from './Auth';
 
 export interface AuthRepository {
     findUserByEmail(email: string): Promise<User | null>;
