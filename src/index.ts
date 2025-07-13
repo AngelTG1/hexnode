@@ -6,6 +6,7 @@ import { userRoutes } from "./feature/users/infrastructure/Routes/UserRouter";
 import { authRoutes } from "./feature/auth/infrastructure/Routes/AuthRoutes";
 import { productRoutes } from "./feature/products/infrastructure/Routes/ProductRoutes";
 import { subscriptionRoutes } from "./feature/subscriptions/infrastructure/Routes/SubscriptionRoutes";
+import { cartRoutes } from "./feature/cart/infrastructure/routes/CartRoutes";
 import { connectDatabase } from "./core/config/Mysql";
 
 dotenv.config();
@@ -36,6 +37,7 @@ async function bootstrap() {
     app.use("/API/v1/auth",  authRoutes);
     app.use("/API/v1/products", productRoutes);
     app.use("/API/v1/subscriptions", subscriptionRoutes);
+    app.use("/API/v1/cart", cartRoutes);
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
