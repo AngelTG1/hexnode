@@ -19,7 +19,7 @@ export class ProductController {
         private readonly updateProductUseCase: UpdateProductUseCase,
         private readonly deleteProductUseCase: DeleteProductUseCase,
         private readonly searchProductsUseCase: SearchProductsUseCase
-    ) {}
+    ) { }
 
     // POST /api/v1/products
     createProduct = async (req: Request, res: Response): Promise<void> => {
@@ -73,7 +73,7 @@ export class ProductController {
 
             const query = req.query.q as string || '';
             const filters = this.extractFiltersFromQuery(req.query);
-            
+
             const result = await this.searchProductsUseCase.execute(query, filters);
 
             res.status(200).json({
@@ -96,8 +96,27 @@ export class ProductController {
         try {
             console.log('👤 ProductController - Get my products request');
 
+            // ✅ LOGS DE DEBUG
+            console.log('🔍 Requesting products for seller ID:', req.user?.userId);
+            console.log('🔍 Seller ID type:', typeof req.user?.userId);
+
             const filters = this.extractFiltersFromQuery(req.query);
+            console.log('🔍 Applied filters:', filters);
+
             const result = await this.getMyProductsUseCase.execute(req.user!.userId, filters);
+
+            console.log('🔍 Found products count:', result.products.length);
+            console.log('🔍 Seller stats:', result.stats);
+
+            // ✅ SI HAY PRODUCTOS, MOSTRAR EL PRIMERO
+            if (result.products.length > 0) {
+                console.log('🔍 First product sample:', {
+                    uuid: result.products[0].uuid,
+                    name: result.products[0].name,
+                    sellerId: result.products[0].sellerId,
+                    status: result.products[0].status
+                });
+            }
 
             res.status(200).json({
                 status: 'success',

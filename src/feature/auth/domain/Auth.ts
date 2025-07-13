@@ -3,11 +3,7 @@
 export interface LoginRequest {
     email: string;
     password: string;
-    // ✅ NUEVO: Datos del dispositivo para FCM
-    fcmToken?: string;
-    deviceType?: 'android' | 'ios' | 'web';
-    deviceId?: string;
-    deviceName?: string;
+
 }
 
 export interface RegisterRequest {
@@ -17,11 +13,7 @@ export interface RegisterRequest {
     password: string;
     phone?: string;
     role?: 'Cliente' | 'memberships';
-    // ✅ NUEVO: Datos del dispositivo para FCM
-    fcmToken?: string;
-    deviceType?: 'android' | 'ios' | 'web';
-    deviceId?: string;
-    deviceName?: string;
+
 }
 
 export interface AuthResponse {
@@ -35,9 +27,6 @@ export interface AuthResponse {
         role: string;
     };
     token: string;
-    // ✅ NUEVO: Confirmación de registro FCM
-    fcmRegistered?: boolean;
-    deviceRegistered?: boolean;
 }
 
 export interface JwtPayload {
@@ -47,26 +36,3 @@ export interface JwtPayload {
     role: string;
 }
 
-// ✅ NUEVO: Interfaces para FCM
-export interface FCMTokenData {
-    userId: number;
-    fcmToken: string;
-    deviceType: 'android' | 'ios' | 'web';
-    deviceId?: string;
-    deviceName?: string;
-}
-
-export interface FCMNotificationData {
-    userId: number;
-    title: string;
-    body: string;
-    data?: Record<string, any>;
-    notificationType: string;
-}
-
-export interface PushNotificationPayload {
-    title: string;
-    body: string;
-    data?: Record<string, any>;
-    token: string;
-}

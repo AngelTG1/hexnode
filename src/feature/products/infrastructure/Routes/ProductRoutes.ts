@@ -7,24 +7,12 @@ import { subscriptionMiddleware } from '../../../../core/middleware/Subscription
 export const productRoutes = express.Router();
 
 // ==========================================
-// RUTAS PÚBLICAS (no requieren autenticación)
+// ✅ RUTAS ESPECÍFICAS PRIMERO (ORDEN CRÍTICO)
 // ==========================================
-
-// GET /api/v1/products - Ver todos los productos (público)
-productRoutes.get('/', async (req: Request, res: Response) => {
-    try {
-        await productController.getAllProducts(req, res);
-    } catch (error) {
-        console.error('Error in GET products route:', error);
-        res.status(500).json({
-            status: 'error',
-            message: 'Internal server error'
-        });
-    }
-});
 
 // GET /api/v1/products/search - Buscar productos (público)
 productRoutes.get('/search', async (req: Request, res: Response) => {
+    console.log('🔍 Ejecutando ruta: /search');
     try {
         await productController.searchProducts(req, res);
     } catch (error) {
@@ -36,28 +24,13 @@ productRoutes.get('/search', async (req: Request, res: Response) => {
     }
 });
 
-// GET /api/v1/products/:uuid - Ver producto específico (público)
-productRoutes.get('/:uuid', async (req: Request, res: Response) => {
-    try {
-        await productController.getProductByUuid(req, res);
-    } catch (error) {
-        console.error('Error in GET product by UUID route:', error);
-        res.status(500).json({
-            status: 'error',
-            message: 'Internal server error'
-        });
-    }
-});
-
-// ==========================================
-// RUTAS PROTEGIDAS (requieren autenticación)
-// ==========================================
-
 // GET /api/v1/products/my-products - Ver mis productos (Premium/Admin)
 productRoutes.get('/my-products',
     authMiddleware.authenticate,
     subscriptionMiddleware.requirePremium,
     async (req: Request, res: Response) => {
+        console.log('✅ Ejecutando ruta: /my-products');
+        console.log('🔍 Usuario autenticado:', req.user?.email);
         try {
             await productController.getMyProducts(req, res);
         } catch (error) {
@@ -70,11 +43,30 @@ productRoutes.get('/my-products',
     }
 );
 
+// ==========================================
+// RUTAS GENERALES
+// ==========================================
+
+// GET /api/v1/products - Ver todos los productos (público)
+productRoutes.get('/', async (req: Request, res: Response) => {
+    console.log('🔍 Ejecutando ruta: / (todos los productos)');
+    try {
+        await productController.getAllProducts(req, res);
+    } catch (error) {
+        console.error('Error in GET products route:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Internal server error'
+        });
+    }
+});
+
 // POST /api/v1/products - Crear producto (Premium/Admin)
 productRoutes.post('/',
     authMiddleware.authenticate,
     subscriptionMiddleware.requirePremium,
     async (req: Request, res: Response) => {
+        console.log('✅ Ejecutando ruta: POST /');
         try {
             await productController.createProduct(req, res);
         } catch (error) {
@@ -87,11 +79,30 @@ productRoutes.post('/',
     }
 );
 
+// ==========================================
+// ✅ RUTAS CON PARÁMETROS AL FINAL (CRÍTICO)
+// ==========================================
+
+// GET /api/v1/products/:uuid - Ver producto específico (público)
+productRoutes.get('/:uuid', async (req: Request, res: Response) => {
+    console.log('🔍 Ejecutando ruta: /:uuid con UUID:', req.params.uuid);
+    try {
+        await productController.getProductByUuid(req, res);
+    } catch (error) {
+        console.error('Error in GET product by UUID route:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Internal server error'
+        });
+    }
+});
+
 // PUT /api/v1/products/:uuid - Actualizar producto (Premium/Admin)
 productRoutes.put('/:uuid',
     authMiddleware.authenticate,
     subscriptionMiddleware.requirePremium,
     async (req: Request, res: Response) => {
+        console.log('✅ Ejecutando ruta: PUT /:uuid');
         try {
             await productController.updateProduct(req, res);
         } catch (error) {
@@ -109,6 +120,7 @@ productRoutes.delete('/:uuid',
     authMiddleware.authenticate,
     subscriptionMiddleware.requirePremium,
     async (req: Request, res: Response) => {
+        console.log('✅ Ejecutando ruta: DELETE /:uuid');
         try {
             await productController.deleteProduct(req, res);
         } catch (error) {
@@ -153,4 +165,8 @@ productRoutes.delete('/:uuid',
 //     } catch (error) {
 //         console.error('Error in GET products by seller route:', error);
 //         res.status(500).json({
-//             status:
+//             status: 'error',
+//             message: 'Internal server error'
+//         });
+//     }
+// });
