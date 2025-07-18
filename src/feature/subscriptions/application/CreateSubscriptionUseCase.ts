@@ -2,7 +2,7 @@
 import { SubscriptionRepository } from '../domain/SubscriptionRepository';
 import { UserRepository } from '../../users/domain/UserRepository'; // ✅ NUEVO
 import { Subscription } from '../domain/Subscription';
-import { 
+import {
     SubscriptionPlanNotFoundError,
     ActiveSubscriptionExistsError,
     InactiveSubscriptionPlanError,
@@ -29,12 +29,12 @@ export class CreateSubscriptionUseCase {
     constructor(
         private readonly subscriptionRepository: SubscriptionRepository,
         private readonly userRepository: UserRepository // ✅ NUEVO
-    ) {}
+    ) { }
 
     async execute(request: CreateSubscriptionRequest): Promise<CreateSubscriptionResponse> {
         console.log('💎 CreateSubscriptionUseCase - Creating subscription for user:', request.userId);
 
-        
+
 
         // Validar que el usuario no tenga una suscripción activa
         const hasActiveSubscription = await this.subscriptionRepository.hasActiveSubscription(request.userId);
@@ -110,6 +110,8 @@ export class CreateSubscriptionUseCase {
         };
     }
 
+    // En tu CreateSubscriptionUseCase.ts, método validatePaymentData:
+
     private validatePaymentData(request: CreateSubscriptionRequest, plan: any): void {
         // Para planes gratuitos, no se requiere método de pago
         if (plan.isFree()) {
@@ -127,11 +129,17 @@ export class CreateSubscriptionUseCase {
             throw new InvalidPaymentDataError(`payment method must be one of: ${allowedMethods.join(', ')}`);
         }
 
-        // Para métodos automáticos, requerir referencia
+        // ✅ CAMBIO: Hacer paymentReference opcional para testing
+        // Para métodos automáticos, requerir referencia (pero hacer más flexible)
         if (['stripe', 'paypal'].includes(request.paymentMethod) && !request.paymentReference) {
+            // Solo advertir en desarrollo, no fallar
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('⚠️ Payment reference not provided for automated payment method');
+                return; // No fallar en desarrollo
+            }
             throw new InvalidPaymentDataError('payment reference is required for automated payment methods');
         }
     }
 
-    
+
 }
